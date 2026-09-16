@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three-Tier Web Application — Keegan Shirley</title>
+<meta name="description" content="Case study: a fully serverless three-tier web application on S3, CloudFront, API Gateway, Lambda, and DynamoDB.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="nav-wrap">
+    <a href="/" class="brand">Keegan <span>Shirley</span></a>
+    <nav class="main-nav">
+      <a href="/" data-match="/">About Me</a>
+      <a href="/experience.html" data-match="/experience.html">Experience</a>
+      <a href="/education.html" data-match="/education.html">Education</a>
+      <a href="/projects/" data-match="/projects/">Projects</a>
+      <a href="/contact.html" data-match="/contact.html">Contact</a>
+      <a href="/resume/keegan-shirley-resume.pdf" class="btn btn-gold nav-cta" target="_blank" rel="noopener">Resume</a>
+    </nav>
+    <button class="nav-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<section class="project-hero">
+  <div class="container">
+    <a href="/projects/" class="back-link">&larr; All Projects</a>
+    <div class="eyebrow">Case Study &middot; Serverless Architecture</div>
+    <h1>Three-Tier Web Application</h1>
+    <p>A robust, scalable three-tier web application built entirely on serverless AWS resources to minimize operational overhead. Visitors can query a database and retrieve user data through a clean presentation, logic, and database layer split.</p>
+    <div class="tag-row"><span class="tag">Amazon S3</span><span class="tag">CloudFront</span><span class="tag">API Gateway</span><span class="tag">Lambda</span><span class="tag">DynamoDB</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="grid-2">
+      <div>
+        <div class="eyebrow">Objectives</div>
+        <h3>Functional Requirements</h3>
+        <ul class="req-list">
+          <li><span class="mark">&#10003;</span> Fetch user data on request from the website's visitor</li>
+        </ul>
+      </div>
+      <div>
+        <div class="eyebrow">&nbsp;</div>
+        <h3>Non-Functional Requirements</h3>
+        <ul class="req-list">
+          <li><span class="mark">&#10003;</span> 99.9% uptime availability</li>
+          <li><span class="mark">&#10003;</span> Handle up to 10,000 concurrent users without performance degradation</li>
+          <li><span class="mark">&#10003;</span> Response time under 3 seconds</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Architecture</div>
+      <h2>Workflow &amp; Draft Architecture</h2>
+    </div>
+    <div class="grid-2" style="align-items:center;">
+      <ol class="req-list">
+        <li><span class="mark">1</span> <strong>Presentation:</strong> static website on S3, served through a CloudFront distribution</li>
+        <li><span class="mark">2</span> <strong>Logic:</strong> Lambda function behind an API Gateway to process requests</li>
+        <li><span class="mark">3</span> <strong>Database:</strong> DynamoDB table populated with user data</li>
+        <li><span class="mark">4</span> <strong>Integration:</strong> Lambda granted read-only access to DynamoDB; website wired to API Gateway</li>
+        <li><span class="mark">5</span> Validate end-to-end functionality</li>
+      </ol>
+      <img src="/images/three-tier/architecture.jpg" alt="Architecture diagram: S3 to CloudFront to API Gateway to Lambda to DynamoDB, split into presentation, application, and database tiers" style="border-radius:6px;border:1px solid var(--border);box-shadow:var(--shadow);" data-zoomable>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Building It</div>
+      <h2>Presentation, logic, and database — wired together</h2>
+    </div>
+
+    <p><strong>Presentation layer.</strong> I used Microsoft Copilot to generate simple web files, uploaded them to an S3 bucket, and put a CloudFront distribution in front of it — setting Origin Access Control so only CloudFront (not the public) could reach the bucket's objects, with <code>index.html</code> as the default root object.</p>
+    <p><strong>Locking down the bucket.</strong> I scoped the S3 bucket policy to accept requests only from that specific CloudFront distribution, then confirmed the distribution's URL was serving the site correctly over HTTPS.</p>
+
+    <div class="step">
+      <div>
+        <div class="step-num">LOGIC LAYER</div>
+        <h3>Programming the Lambda function</h3>
+        <p>This function fetches user data from a DynamoDB table when a visitor enters a user ID on the site. It receives the ID via a query string parameter, initializes a DynamoDB client, issues a <code>Get</code> command against the <code>UserData</code> table, and returns the matching item — or an error message if nothing is found.</p>
+      </div>
+      <div class="step-media"><img src="/images/three-tier/lambda-function.jpg" alt="RetrieveUserData Lambda function source code" data-zoomable></div>
+    </div>
+
+    <p><strong>Creating the API Gateway.</strong> I built a REST API, configured a <code>GET</code> method connected to the Lambda function, enabled CORS to keep cross-origin requests secure and functional, and deployed a production stage.</p>
+    <p><strong>Creating the DynamoDB table.</strong> I set the partition key to <code>userID</code> so the table queries return all data tied to a given ID, then added test attributes to validate the schema.</p>
+
+    <div class="step reverse">
+      <div>
+        <div class="step-num">LEAST PRIVILEGE</div>
+        <h3>Assigning permissions to the Lambda function</h3>
+        <p>Applying the principle of least privilege, I granted the <code>RetrieveUserData</code> function read-only access to DynamoDB — it only needs to retrieve data, never write or modify it. After this, the logic and database layers were fully integrated and returning data correctly.</p>
+      </div>
+      <div class="step-media"><img src="/images/three-tier/iam-policy.jpg" alt="IAM policy attachment: AmazonDynamoDBReadOnlyAccess selected for the Lambda execution role" data-zoomable></div>
+    </div>
+
+    <div class="step">
+      <div>
+        <div class="step-num">INTEGRATION</div>
+        <h3>Integrating the website with API Gateway</h3>
+        <p>I pointed the front-end JavaScript at the API's invoke URL so that pressing "Get User Data" triggers the right request — connecting the presentation layer to the logic layer end to end.</p>
+      </div>
+      <div class="step-media"><img src="/images/three-tier/frontend-fetch.jpg" alt="Front-end JavaScript fetching user data from the API Gateway invoke URL" data-zoomable></div>
+    </div>
+
+    <div class="step reverse">
+      <div>
+        <div class="step-num">VALIDATION</div>
+        <h3>Validating the application</h3>
+        <p>With every layer wired together, I tested the full flow: enter a user ID, press "Get User Data," and the app pulls the matching record straight from DynamoDB through the API.</p>
+      </div>
+      <div class="step-media"><img src="/images/three-tier/live-demo.jpg" alt="Working demo: User Information lookup returning a JSON record" data-zoomable></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Results</div>
+      <h2>Requirements Evaluation</h2>
+    </div>
+    <ul class="req-list">
+      <li><span class="mark">&#10003;</span> <strong>Fetch user data</strong> — the button on the landing page triggers API Gateway, which invokes Lambda to retrieve the record from DynamoDB and return it.</li>
+      <li><span class="mark">&#10003;</span> <strong>Uptime</strong> — based on AWS service SLAs, the stack projects at least 99.95% monthly uptime, ahead of the 99.9% target.</li>
+      <li><span class="mark">&#10003;</span> <strong>Concurrency</strong> — the serverless architecture is designed to handle 10,000 simultaneous users without degradation.</li>
+      <li><span class="mark">&#10003;</span> <strong>Response time</strong> — testing samples stayed just under 2 seconds, comfortably inside the 3-second budget.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">What's Next</div>
+      <h2>Future Improvements &amp; Upgrades</h2>
+    </div>
+    <div class="grid-2">
+      <div class="improve-card">
+        <h4>Enhanced User Authentication</h4>
+        <p class="text-muted" style="margin:0;">Multi-factor authentication for added security.</p>
+        <div class="services">Services: AWS Cognito, AWS IAM</div>
+      </div>
+      <div class="improve-card">
+        <h4>Advanced Data Filtering &amp; Analytics</h4>
+        <p class="text-muted" style="margin:0;">Granular filtering options with visual reporting.</p>
+        <div class="services">Services: AWS QuickSight, AWS Glue</div>
+      </div>
+      <div class="improve-card">
+        <h4>User Experience Enhancements</h4>
+        <p class="text-muted" style="margin:0;">Modern UI framework with responsive design across devices.</p>
+        <div class="services">Services: AWS Amplify, AWS CloudFront</div>
+      </div>
+      <div class="improve-card">
+        <h4>CI/CD</h4>
+        <p class="text-muted" style="margin:0;">Automated testing and deployment for easy, low-downtime updates.</p>
+        <div class="services">Services: AWS CodePipeline, CodeDeploy, CodeBuild</div>
+      </div>
+      <div class="improve-card">
+        <h4>User Feedback Integration</h4>
+        <p class="text-muted" style="margin:0;">Collect feedback and suggestions through surveys and forms.</p>
+        <div class="services">Services: AWS SNS, AWS SQS</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt center">
+  <div class="container">
+    <h2>See the other build</h2>
+    <a href="/projects/ai-model.html" class="btn btn-primary">Chat-GP3P0: A Conversational AI Model &rarr;</a>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="brand">Keegan Shirley</div>
+        <p class="text-muted" style="margin-top:8px;max-width:34ch;">AWS Solutions Architect &amp; IT Infrastructure Security professional.</p>
+      </div>
+      <nav class="footer-nav">
+        <a href="/">About Me</a>
+        <a href="/experience.html">Experience</a>
+        <a href="/education.html">Education</a>
+        <a href="/projects/">Projects</a>
+        <a href="/contact.html">Contact</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Keegan Shirley. All rights reserved.</span>
+      <span><a href="mailto:keeganshirley757@gmail.com">keeganshirley757@gmail.com</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

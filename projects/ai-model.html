@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat-GP3P0: A Conversational AI Model — Keegan Shirley</title>
+<meta name="description" content="Case study: an AWS Bedrock + Lex chatbot using retrieval-augmented generation over a custom knowledge base.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="nav-wrap">
+    <a href="/" class="brand">Keegan <span>Shirley</span></a>
+    <nav class="main-nav">
+      <a href="/" data-match="/">About Me</a>
+      <a href="/experience.html" data-match="/experience.html">Experience</a>
+      <a href="/education.html" data-match="/education.html">Education</a>
+      <a href="/projects/" data-match="/projects/">Projects</a>
+      <a href="/contact.html" data-match="/contact.html">Contact</a>
+      <a href="/resume/keegan-shirley-resume.pdf" class="btn btn-gold nav-cta" target="_blank" rel="noopener">Resume</a>
+    </nav>
+    <button class="nav-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<section class="project-hero">
+  <div class="container">
+    <a href="/projects/" class="back-link">&larr; All Projects</a>
+    <div class="eyebrow">Case Study &middot; Generative AI</div>
+    <h1>Chat-GP3P0: A Conversational AI Model</h1>
+    <p>A functional AI-powered LLM chatbot that pulls from a custom knowledge base using retrieval-augmented generation. Primed with the full script of Star Wars: A New Hope, it gives thoughtful, in-character answers about the film, its significance, and its cultural impact.</p>
+    <div class="tag-row"><span class="tag">Amazon Bedrock</span><span class="tag">Amazon Lex</span><span class="tag">Amazon S3</span><span class="tag">Claude by Anthropic</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="grid-2">
+      <div>
+        <div class="eyebrow">Objectives</div>
+        <h3>Functional Requirements</h3>
+        <ul class="req-list">
+          <li><span class="mark">&#10003;</span> Provide intelligent, thoughtful responses to all questions about Star Wars: A New Hope</li>
+          <li><span class="mark">&#10003;</span> Integrate the chatbot with a comprehensive knowledge base of detailed film information</li>
+        </ul>
+      </div>
+      <div>
+        <div class="eyebrow">&nbsp;</div>
+        <h3>Non-Functional Requirements</h3>
+        <ul class="req-list">
+          <li><span class="mark">&#10003;</span> Maintain an average response time under 3 seconds per query</li>
+          <li><span class="mark">&#10003;</span> Uptime availability of 99.95%</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Architecture</div>
+      <h2>Workflow &amp; Draft Architecture</h2>
+    </div>
+    <div class="grid-2" style="align-items:center;">
+      <ol class="req-list" style="counter-reset:step;">
+        <li><span class="mark">1</span> Choose an appropriate foundational model in Amazon Bedrock</li>
+        <li><span class="mark">2</span> Store reference data in an Amazon S3 bucket</li>
+        <li><span class="mark">3</span> Create a knowledge base in Bedrock, add the S3 bucket, and connect the foundational model</li>
+        <li><span class="mark">4</span> Configure the AI chatbot agent using Amazon Lex and add intents</li>
+        <li><span class="mark">5</span> Test and monitor performance</li>
+      </ol>
+      <img src="/images/ai-model/architecture.jpg" alt="Architecture diagram: users to AI Chatbot (Lex) to Knowledge Base (Bedrock) to Data Repository (S3)" style="border-radius:6px;border:1px solid var(--border);box-shadow:var(--shadow);" data-zoomable>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Building It</div>
+      <h2>From foundational model to working chatbot</h2>
+    </div>
+
+    <p><strong>Selecting a foundational model.</strong> Claude by Anthropic was the right fit for this project because of its advanced language understanding and generation — with a serverless deployment type and a 100,000-token context window, it comfortably handles the application's request load.</p>
+    <p><strong>Creating the S3 bucket.</strong> I created a general-purpose bucket with encryption enabled and uploaded the full script of Star Wars: A New Hope as the first data deposit.</p>
+
+    <div class="step">
+      <div>
+        <div class="step-num">STEP 03</div>
+        <h3>Integrating a knowledge base</h3>
+        <p>Back in Bedrock, I created a knowledge base for the foundational model to pull from, chose S3 as the data source, and pointed it at the bucket from the previous step — using the default embedding model and vector store.</p>
+      </div>
+      <div class="step-media"><img src="/images/ai-model/bedrock-data-source.jpg" alt="Amazon Bedrock: choose data source screen, Amazon S3 selected" data-zoomable></div>
+    </div>
+
+    <div class="step reverse">
+      <div>
+        <div class="step-num">STEP 04</div>
+        <h3>Configuring a chatbot with Amazon Lex</h3>
+        <p>I named the bot, created an IAM role granting Lex the minimum permissions needed, and added a hard-coded <code>WelcomeIntent</code> to greet new users. I then added a built-in generative AI intent, <code>QnABotIntent</code>, to parse the knowledge base and generate thoughtful responses to user questions.</p>
+      </div>
+      <div class="step-media"><img src="/images/ai-model/lex-intents.jpg" alt="Amazon Lex intents list: QnABotIntent, WelcomeIntent, FallbackIntent" data-zoomable></div>
+    </div>
+
+    <div class="step">
+      <div>
+        <div class="step-num">STEP 05</div>
+        <h3>Testing for effectiveness</h3>
+        <p>With the chatbot developed, primed with a knowledge base, and connected to a web application, I ran queries to gauge response accuracy and effectiveness. As I added more information to the S3 bucket for context, the responses became noticeably more insightful.</p>
+      </div>
+      <div class="step-media"><img src="/images/ai-model/chatbot-demo-1.jpg" alt="Chat-GP3P0 test conversation about Luke Skywalker" data-zoomable></div>
+    </div>
+    <div style="max-width:280px;margin:-24px auto 0;">
+      <img src="/images/ai-model/chatbot-demo-2.jpg" alt="Chat-GP3P0 test conversation about critic reception and fun facts" style="border-radius:6px;border:1px solid var(--border);box-shadow:var(--shadow);" data-zoomable>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Results</div>
+      <h2>Requirements Evaluation</h2>
+    </div>
+    <ul class="req-list">
+      <li><span class="mark">&#10003;</span> <strong>Intelligent responses</strong> — Chat-GP3P0 provides thoughtful, contextually relevant answers using Claude by Anthropic for advanced language understanding.</li>
+      <li><span class="mark">&#10003;</span> <strong>Knowledge base integration</strong> — connected to a comprehensive S3-backed knowledge base via Amazon Bedrock.</li>
+      <li><span class="mark">&#10003;</span> <strong>Response time</strong> — testing samples show a consistent average under 2 seconds, beating the 3-second target.</li>
+      <li><span class="mark">&#10003;</span> <strong>Uptime</strong> — based on AWS service SLAs, the system achieves at least 99.95% monthly uptime.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">What's Next</div>
+      <h2>Future Improvements &amp; Upgrades</h2>
+    </div>
+    <div class="grid-2">
+      <div class="improve-card">
+        <h4>User Experience Enhancements</h4>
+        <p class="text-muted" style="margin:0;">Rebuild the UI with a modern framework (React, Angular) and responsive design for use across devices.</p>
+      </div>
+      <div class="improve-card">
+        <h4>Enhanced User Interaction</h4>
+        <p class="text-muted" style="margin:0;">Add NLU capabilities for more diverse inputs, plus voice interaction via Amazon Polly.</p>
+      </div>
+      <div class="improve-card">
+        <h4>Expanded Knowledge Base</h4>
+        <p class="text-muted" style="margin:0;">Continuously update with additional Star Wars lore and related media.</p>
+      </div>
+      <div class="improve-card">
+        <h4>Analytics &amp; Monitoring</h4>
+        <p class="text-muted" style="margin:0;">Track performance and usage with CloudWatch, and surface popular queries and improvement areas.</p>
+        <div class="services">Services: AWS CloudWatch</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt center">
+  <div class="container">
+    <h2>See the other build</h2>
+    <a href="/projects/three-tier.html" class="btn btn-primary">Three-Tier Web Application &rarr;</a>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="brand">Keegan Shirley</div>
+        <p class="text-muted" style="margin-top:8px;max-width:34ch;">AWS Solutions Architect &amp; IT Infrastructure Security professional.</p>
+      </div>
+      <nav class="footer-nav">
+        <a href="/">About Me</a>
+        <a href="/experience.html">Experience</a>
+        <a href="/education.html">Education</a>
+        <a href="/projects/">Projects</a>
+        <a href="/contact.html">Contact</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Keegan Shirley. All rights reserved.</span>
+      <span><a href="mailto:keeganshirley757@gmail.com">keeganshirley757@gmail.com</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>
